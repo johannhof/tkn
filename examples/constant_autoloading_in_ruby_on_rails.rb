@@ -1,393 +1,87 @@
 # encoding: utf-8
 
 center <<-EOS
-  \e[1mConstant Autoloading in Ruby on Rails\e[0m
-
-
-  Xavier Noria
-  @fxn
-
-  BaRuCo 2012
+  \e[1mRust\e[0m
 EOS
 
-code <<-EOS
-  require 'application_controller'
-  require 'post'
+section "Rust Basics" do
+  block <<-EOS
+    Rust
 
-  class PostsController < ApplicationController
-    def index
-      @posts = Post.all
-    end
-  end
-EOS
-
-code <<-EOS
-  class PostsController < ApplicationController
-    def index
-      @posts = Post.all
-    end
-  end
-EOS
-
-section "Constants Refresher" do
-  code <<-EOS
-    X = 1
-  EOS
-
-  code <<-EOS
-    class C
-    end
-  EOS
-
-  code <<-EOS
-    # ordinary class definition
-    class C < D
-      include M
-    end
-
-    # equivalent modulus details
-    C = Class.new(D) do
-      include M
-    end
-    
-    # class name comes from the constant
-    C.name # => "C"
-  EOS
-
-  code <<-EOS
-    ArgumentError      FalseClass
-    Array              Fiber
-    BasicObject        File
-    Bignum             FileTest
-    Binding            Fixnum
-    Class              Float
-    Comparable         GC
-    Complex            Gem
-    Config             Hash
-    Dir                IO
-    Encoding           IOError
-    EncodingError      IndexError
-    Enumerable         Integer
-    Enumerator         Interrupt
-    Errno              Kernel
-    Exception          ...
-  EOS
-
-  center <<-EOS
-    Constants are stored in modules
-  EOS
-
-  code <<-EOS
-    # rubinius/kernel/common/module.rb
-    
-    class Module
-      attr_reader :constant_table
-      attr_writer :method_table
-      ...
-    end
-  EOS
-
-  code <<-EOS
-    module M
-      X = 1
-    end
-  EOS
-
-  code <<-EOS
-    # ordinary class definition in namespace
-    module XML
-      class SAXParser
-      end
-    end
-    
-    # equivalent modulus details to
-    module XML
-      SAXParser = Class.new
-    end
-  EOS
-
-  center <<-EOS
-    Constants API
-  EOS
-
-  center <<-EOS
-    Constant Name Resolution (1)
-  EOS
-
-  code <<-EOS
-    module M
-      X = 1
-    end
-  EOS
-
-  code <<-EOS
-    module Admin
-      class UsersController < ApplicationController
-      end
-    end
-  EOS
-
-  center <<-EOS
-    Constant Name Resolution (2)
-  EOS
-
-  code <<-EOS
-    M::X
-  EOS
-
-  center <<-EOS
-    Constant Name Resolution (3)
-  EOS
-
-  code <<-EOS
-    module M
-      module N
-        class C < D
-          X
-        end
-      end
-    end
+     * is a systems programming language
+     * has mostly C-like syntax
+     * is LLVM-compiled
+     * has an unforgiving compiler
+     * ...usually works flawlessly once it compiles
+     * provides memory safety without garbage collection
   EOS
 end
 
-section "Constant Autoloading" do
-  code <<-EOS
-    module Admin
-      class UsersController < ApplicationController
-        def index
-          @users = User.all
-        end
-      end
-    end
+section "Rust Tooling" do
+  center <<-EOS
+    \e[1mCargo\e[0m
   EOS
-
-  code <<-EOS
-    # active_support/dependencies.rb
-
-    def self.const_missing(const_name)
-      name       # => "Admin::UsersController"
-      const_name # => :User
-    end
-  EOS
-
-  code <<-EOS
-    config.autoload_paths
-  EOS
-
   block <<-EOS
-    admin/users_controller/user.rb
-    admin/users_controller/user
+    $ cargo run
 
-    # trade-offs
+    $ cargo build
 
-    admin/user.rb
-    admin/user
-
-    # trade-offs
-
-    user.rb # FOUND
+    $ cargo test
   EOS
-
-  code <<-EOS
-    class Contact < ActiveRecord::Base
-      after_commit :register_event
-
-      def register_event
-        Worker::EventRegister.perform_async(...)
-      end
-    end
-  EOS
-
-  block <<-EOS
-    contact/worker.rb
-    contact/worker
-
-    # trade-offs
-
-    worker.rb
-    worker # FOUND
-  EOS
-
-  code <<-EOS
-    Object.const_set("Worker", Module.new)
-  EOS
-
-  block <<-EOS
-    We keep track of:
-
-      * Fully qualified names of autoloaded constants
-
-      * Their corresponding file names
-  EOS
-
   center <<-EOS
-    Kernel#load and Kernel#require are wrapped
+    Cargo is a package manager
   EOS
-
-  # center <<-EOS
-  #   require_dependency "sti_grandchildren"
-  # EOS
-
-  block <<-EOS
-    Problem: Which Is The Nesting?
-  EOS
-
   code <<-EOS
-    # active_support/dependencies.rb
+    [package]
 
-    def self.const_missing(const_name)
-      name       # => "Admin::UsersController"
-      const_name # => :User
-    end
+    name = "markdown"
+    version = "0.0.1"
+    authors = ["Johann Hofmann <mail@johann-hofmann.com>"]
+    description = "Native Rust library for parsing
+                   Markdown (and outputting HTML)"
+    repository = "https://github.com/johannhof/markdown.rs"
+    readme = "README.md"
+    keywords = ["markdown", "md", "html", "parser"]
+    license = "MIT"
+
+    exclude = [
+        "test.md"
+    ]
+
+    [dependencies]
+    regex_macros = "0.1.5"
+    regex = "0.1.10"
   EOS
-
-  code <<-EOS
-    module M
-      module N
-        # nesting: [M::N, M]
-      end
-    end
-
-    module M::N
-      # nesting: [M::N]
-    end
-
-    module A::B
-      module M::N
-        # nesting: [M::N, A::B]
-      end
-    end
-  EOS
-
-  code <<-EOS1
-    module M
-      Module.new.module_eval <<-EOS
-        # nesting: [#<Module:0x007fa4a284f708>, M]
-      EOS
-    end
-  EOS1
-
   center <<-EOS
-    Trade-off for Named Modules:
+    $ cargo publish
   EOS
-
   center <<-EOS
-    The name reflects the nesting
+    Find published crates on \e[1mcrates.io\e[0m
   EOS
 
-  code <<-EOS
-    module M
-      module N
-        # nesting: [M::N, M]
-      end
-    end
-  EOS
-
-  center <<-EOS
-    Trade-off for Anonymous Modules
-  EOS
-
-  code <<-EOS
-    # active_support/dependencies.rb
-
-    def const_missing(const_name)
-      from_mod = anonymous? ? ::Object : self
-      ...
-    end
-  EOS
-
-  block <<-EOS
-    Problem: Which Is The Resolution Algorithm?
-  EOS
-
-  code <<-EOS
-    X = 1
-
-    module M
-      X # => 1
-    end
-
-    M::X # => NameError
-  EOS
-
-  center <<-EOS
-    Trade-off
-  EOS
-
-  code <<-EOS
-    # active_support/dependencies.rb
-
-    from_mod.parents.any? do |p|
-      p.const_defined?(const_name, false)
-    end
-  EOS
-
-  center <<-EOS
-    No attempt is made to follow ancestors
-  EOS
-
-  center <<-EOS
-    Corollary: Active Support does not emulate
-    constant name resolution algorithms
-  EOS
 end
 
-section "Request Flow" do
-  code <<-EOS
-    config.cache_classes
-  EOS
+section "Ownership and Lifetimes" do
+end
 
-  code <<-EOS
-    ActiveSupport::FileUpdateChecker
-  EOS
+section "Pattern Matching" do
+end
 
-  code <<-EOS
-    config.autoload_once_paths
-    config.explicitly_unloadable_constants
-  EOS
-
-  code <<-EOS
-    # rails/application.rb
-
-    unless config.cache_classes
-      middleware.use ActionDispatch::Reloader, ...
-    end
-  EOS
-
+section "Not covered" do
   block <<-EOS
-    What is watched and reloaded:
+    // TODO
 
-      * Routes
+      * Traits
 
-      * Locales
+      * Functions and Closures
 
-      * Application files:
-          
-          - Ruby files under autoload_*
+      * Generics
 
-          - db/(schema.rb|structure.sql)
-  EOS
+      * Crate system
 
-  center <<-EOS
-    If files have changed, autoloaded constants
-    are wiped at the beginning of the request
-  EOS
+      * Testing
 
-  code <<-EOS
-    # active_support/dependencies.rb
-
-    autoloaded_constants.each do |const|
-      remove_constant const
-    end
-
-    explicitly_unloadable_constants.each do |const|
-      remove_constant const
-    end
-  EOS
-
-  center <<-EOS
-    Constant access triggers const_missing again
-    because the constants are gone
+      * Concurrency
   EOS
 end
 
@@ -396,35 +90,3 @@ end
 
 __END__
 
-section 'Constant Autoloading Gotchas' do
-end
-
-block <<-EOS
-  Problem 3: Ruby autoload
-EOS
-
-center <<-EOS
-  autoload uses require
-EOS
-
-block <<-EOS
-  require 'foo'
-
-  # TROLOLOL
-  $".delete_at(-1)
-
-  require 'foo'
-EOS
-
-center <<-EOS
-  # app/models/admin.rb
-  # app/models/admin/user.rb
-
-  module Admin
-    autoload :User, 'app/models/admin/user'
-  end
-EOS
-
-block <<-EOS
-  no API for removing autoloads
-EOS
